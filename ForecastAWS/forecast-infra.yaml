@@ -1,0 +1,48 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "Infraestrutura automatizada para projetos de Machine Learning com Amazon Forecast - Desafio DIO"
+Resources:
+  # 1. Criação do Bucket S3 para armazenar os datasets (séries temporais)
+  ForecastDataBucket:
+    Type: "AWS::S3::Bucket"
+    Properties:
+      # Nome único gerado com o ID da conta e região
+      BucketName: !Sub "dio-forecast-datasets-${AWS::AccountId}-${AWS::Region}"
+      VersioningConfiguration:
+        Status: Enabled
+  # 2. Criação da IAM Role (Permissão) para o serviço Amazon Forecast
+  ForecastExecutionRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      RoleName: "DIO-Forecast-Execution-Role"
+      # Política de Confiança: Permite que o Forecast assuma esta role
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: "forecast.amazonaws.com"
+            Action: "sts:AssumeRole"
+
+      # 3. Políticas embutidas concedendo acesso apenas ao bucket criado acima
+      Policies:
+        - PolicyName: "ForecastS3AccessPolicy"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - "s3:GetObject"
+                  - "s3:PutObject"
+                  - "s3:ListBucket"
+                Resource:
+                  # Acesso ao bucket em si e a todos os objetos dentro dele
+                  - !GetAtt ForecastDataBucket.Arn
+                  - !Sub "${ForecastDataBucket.Arn}/*"
+Outputs:
+  BucketName:
+    Description: "Nome do Bucket S3 para upload de datasets"
+    Value: !Ref ForecastDataBucket
+
+  ForecastRoleArn:
+    Description: "ARN da IAM Role que deve ser anexada ao Amazon Forecast"
+    Value: !GetAtt ForecastExecutionRole.Arn
