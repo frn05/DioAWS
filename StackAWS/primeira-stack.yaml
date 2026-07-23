@@ -1,0 +1,18 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "Minha primeira stack no CloudFormation - Desafio DIO"
+Resources:
+  # Define o recurso que será criado: Um Bucket no Amazon S3
+  MeuPrimeiroBucket:
+    Type: "AWS::S3::Bucket"
+    Properties:
+      # Cria um nome único usando o ID da sua conta AWS para evitar erros de nome duplicado
+      BucketName: !Sub "dio-desafio-cf-bucket-${AWS::AccountId}"
+
+      # Ativa o versionamento de arquivos dentro do bucket
+      VersioningConfiguration:
+        Status: Enabled
+Outputs:
+  # Mostra o nome do bucket criado na aba 'Outputs' do CloudFormation
+  BucketNameOutput:
+    Description: "Nome do bucket S3 criado automaticamente"
+    Value: !Ref MeuPrimeiroBucket
